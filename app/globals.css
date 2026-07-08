@@ -1,26 +1,407 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Shell do Pokédex (plástico vermelho) */
+  --color-dex-red: #dc0a2d;
+  --color-dex-red-dark: #8f0721;
+  --color-dex-red-light: #ff4d5e;
+
+  /* Tela Game Boy DMG (4 tons de verde) */
+  --color-gb-lightest: #9bbc0f;
+  --color-gb-light: #8bac0f;
+  --color-gb-dark: #306230;
+  --color-gb-darkest: #0f380f;
+
+  /* Caixa de diálogo Red/Blue */
+  --color-paper: #f8f8f0;
+  --color-ink: #181820;
+  --color-ash: #a8a890;
+
+  /* Detalhes do hardware */
+  --color-lens-blue: #29a8e0;
+  --color-lens-deep: #145a8a;
+  --color-led-yellow: #ffcb05;
+  --color-led-green: #4ade50;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-pixel: var(--font-press-start), monospace;
+  --font-terminal: var(--font-vt323), monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  /* Cores clássicas dos tipos (Gen III) */
+  --type-normal: #a8a878;
+  --type-fire: #f08030;
+  --type-water: #6890f0;
+  --type-grass: #78c850;
+  --type-electric: #f8d030;
+  --type-ice: #98d8d8;
+  --type-fighting: #c03028;
+  --type-poison: #a040a0;
+  --type-ground: #e0c068;
+  --type-flying: #a890f0;
+  --type-psychic: #f85888;
+  --type-bug: #a8b820;
+  --type-rock: #b8a038;
+  --type-ghost: #705898;
+  --type-dragon: #7038f8;
+  --type-dark: #705848;
+  --type-steel: #b8b8d0;
+  --type-fairy: #ee99ac;
+
+  --duration-exit: 150ms;
+  --duration-enter: 210ms;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-pixel);
+  background-color: var(--color-dex-red);
+  /* plástico: vinheta + textura pontilhada */
+  background-image:
+    radial-gradient(ellipse at 50% -20%, rgb(255 255 255 / 0.14), transparent 60%),
+    radial-gradient(ellipse at 50% 120%, rgb(0 0 0 / 0.35), transparent 60%),
+    repeating-linear-gradient(
+      45deg,
+      rgb(0 0 0 / 0.05) 0px,
+      rgb(0 0 0 / 0.05) 2px,
+      transparent 2px,
+      transparent 6px
+    );
+  color: var(--color-ink);
+  image-rendering: pixelated;
+}
+
+.pixelated {
+  image-rendering: pixelated;
+}
+
+/* ── Caixa de diálogo estilo Pokémon Red/Blue (borda dupla) ─────────── */
+.dialog-box {
+  background: var(--color-paper);
+  border: 3px solid var(--color-ink);
+  box-shadow:
+    inset 0 0 0 2px var(--color-paper),
+    inset 0 0 0 5px var(--color-ink),
+    6px 6px 0 rgb(0 0 0 / 0.25);
+}
+
+/* ── Tela DMG com scanlines ─────────────────────────────────────────── */
+.screen-bezel {
+  background: linear-gradient(180deg, #3a3a44, #26262e);
+  border: 3px solid var(--color-ink);
+  box-shadow:
+    inset 2px 2px 0 rgb(255 255 255 / 0.12),
+    inset -2px -2px 0 rgb(0 0 0 / 0.5),
+    8px 8px 0 rgb(0 0 0 / 0.3);
+}
+
+.screen {
+  position: relative;
+  background-color: var(--color-gb-lightest);
+  background-image: radial-gradient(
+    ellipse at 50% 0%,
+    rgb(255 255 255 / 0.18),
+    transparent 55%
+  );
+  border: 2px solid var(--color-gb-darkest);
+  overflow: hidden;
+}
+
+.screen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgb(15 56 15 / 0.09) 0px,
+    rgb(15 56 15 / 0.09) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+/* ── Botões com sombra dura (aperta e afunda) ───────────────────────── */
+.press-btn {
+  border: 3px solid var(--color-ink);
+  box-shadow: 4px 4px 0 var(--color-ink);
+  transition:
+    translate 80ms steps(2, end),
+    box-shadow 80ms steps(2, end);
+}
+.press-btn:hover {
+  translate: 1px 1px;
+  box-shadow: 3px 3px 0 var(--color-ink);
+}
+.press-btn:active {
+  translate: 4px 4px;
+  box-shadow: 0 0 0 var(--color-ink);
+}
+.press-btn:disabled,
+.press-btn[aria-disabled="true"] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* ── Entrada dos cards (CSS puro: sobrevive a transições abortadas) ── */
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    translate: 0 18px;
+    scale: 0.9;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+.card-enter {
+  animation: card-enter 0.3s steps(5, end) both;
+}
+
+/* ── Cursor ▶ piscando ──────────────────────────────────────────────── */
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+.blink {
+  animation: blink 1.1s steps(2, start) infinite;
+}
+
+/* ── LEDs do hardware ───────────────────────────────────────────────── */
+@keyframes led-pulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.9);
+  }
+}
+.led {
+  border: 2px solid var(--color-ink);
+  border-radius: 9999px;
+  box-shadow: inset -1px -2px 0 rgb(0 0 0 / 0.35);
+}
+.led-blink {
+  animation: led-pulse 1.6s steps(2, start) infinite;
+}
+
+/* ── Lente azul do Pokédex ──────────────────────────────────────────── */
+.lens {
+  border-radius: 9999px;
+  border: 3px solid var(--color-paper);
+  outline: 3px solid var(--color-ink);
+  background:
+    radial-gradient(circle at 32% 28%, #d6f2ff 0 14%, transparent 15%),
+    radial-gradient(circle at 35% 35%, var(--color-lens-blue), var(--color-lens-deep) 70%);
+  box-shadow: inset -4px -6px 0 rgb(0 0 0 / 0.3);
+}
+
+/* ── Grade do alto-falante ──────────────────────────────────────────── */
+.speaker {
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--color-dex-red-dark) 0 3px,
+    transparent 3px 7px
+  );
+}
+
+/* ══ View Transitions ════════════════════════════════════════════════ */
+
+/* Morph do sprite compartilhado (card → detalhe) */
+::view-transition-group(.morph) {
+  animation-duration: 400ms;
+  animation-timing-function: steps(12, end);
+}
+::view-transition-image-pair(.morph) {
+  animation-name: via-pixel-blur;
+}
+@keyframes via-pixel-blur {
+  30% {
+    filter: contrast(1.4) saturate(1.3);
+  }
+}
+
+/* Slides direcionais (avançar = esquerda, voltar = direita) */
+::view-transition-old(.nav-forward) {
+  --slide-offset: -48px;
+  animation:
+    var(--duration-exit) steps(6, end) both vt-fade reverse,
+    320ms steps(8, end) both vt-slide reverse;
+}
+::view-transition-new(.nav-forward) {
+  --slide-offset: 48px;
+  animation:
+    var(--duration-enter) steps(6, end) var(--duration-exit) both vt-fade,
+    320ms steps(8, end) both vt-slide;
+}
+::view-transition-old(.nav-back) {
+  --slide-offset: 48px;
+  animation:
+    var(--duration-exit) steps(6, end) both vt-fade reverse,
+    320ms steps(8, end) both vt-slide reverse;
+}
+::view-transition-new(.nav-back) {
+  --slide-offset: -48px;
+  animation:
+    var(--duration-enter) steps(6, end) var(--duration-exit) both vt-fade,
+    320ms steps(8, end) both vt-slide;
+}
+
+@keyframes vt-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes vt-slide {
+  from {
+    translate: var(--slide-offset) 0;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+
+/* Revelação do Suspense (grid carregando → resultados) */
+::view-transition-old(.reveal-out) {
+  animation: var(--duration-exit) steps(4, end) both vt-fade reverse;
+}
+::view-transition-new(.reveal-in) {
+  animation:
+    var(--duration-enter) steps(6, end) var(--duration-exit) both vt-fade,
+    320ms steps(8, end) both vt-rise;
+}
+@keyframes vt-rise {
+  from {
+    translate: 0 10px;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+
+/* O shell do dispositivo fica ancorado durante as transições */
+::view-transition-group(dex-chrome),
+::view-transition-group(dex-footer) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(dex-chrome),
+::view-transition-old(dex-footer) {
+  display: none;
+}
+::view-transition-new(dex-chrome),
+::view-transition-new(dex-footer) {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+
+/* ── MissingNo. (glitch 404) ────────────────────────────────────────── */
+.missingno {
+  border: 3px solid var(--color-gb-darkest);
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      var(--color-gb-darkest) 0 7px,
+      transparent 7px 13px,
+      var(--color-gb-dark) 13px 22px,
+      transparent 22px 29px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      var(--color-gb-light) 0 5px,
+      var(--color-gb-lightest) 5px 11px,
+      var(--color-gb-dark) 11px 14px
+    );
+  animation: glitch-shift 0.9s steps(2, end) infinite;
+}
+@keyframes glitch-shift {
+  0% {
+    background-position:
+      0 0,
+      0 0;
+    clip-path: inset(0);
+  }
+  25% {
+    background-position:
+      9px 3px,
+      -4px 7px;
+    clip-path: inset(4% -2% 0 2%);
+  }
+  50% {
+    background-position:
+      -6px 11px,
+      8px -3px;
+    clip-path: inset(0 3% 6% -1%);
+  }
+  75% {
+    background-position:
+      14px -5px,
+      -9px 12px;
+    clip-path: inset(8% 0 2% 4%);
+  }
+  100% {
+    background-position:
+      0 0,
+      0 0;
+    clip-path: inset(0);
+  }
+}
+
+/* ── Pokébola em CSS puro ───────────────────────────────────────────── */
+.pokeball {
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  border: 3px solid var(--color-ink);
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      var(--color-paper) 0 14%,
+      var(--color-ink) 15% 26%,
+      transparent 27%
+    ),
+    linear-gradient(
+      180deg,
+      var(--color-dex-red) 0 42%,
+      var(--color-ink) 42% 58%,
+      var(--color-paper) 58% 100%
+    );
+}
+@keyframes spin-steps {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.pokeball-spin {
+  animation: spin-steps 1.1s steps(8, end) infinite;
+}
+
+/* ── Scrollbar retrô ────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-dex-red-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-paper);
+  border: 3px solid var(--color-ink);
 }

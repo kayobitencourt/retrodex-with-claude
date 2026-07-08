@@ -1,65 +1,109 @@
-import Image from "next/image";
+import { Suspense, ViewTransition } from "react";
+import { FilterBar } from "@/components/filter-bar";
+import { Pagination } from "@/components/pagination";
+import { Pokeball } from "@/components/pokeball";
+import { PokemonCard } from "@/components/pokemon-card";
+import { searchPokedex } from "@/lib/pokeapi";
+import type { SearchFilters } from "@/lib/pokedex-meta";
 
-export default function Home() {
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+function first(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+async function Results({ searchParams }: { searchParams: SearchParams }) {
+  const sp = await searchParams;
+  const filters: SearchFilters = {
+    q: first(sp.q)?.trim() || undefined,
+    type: first(sp.type) || undefined,
+    gen: Number(first(sp.gen)) || undefined,
+    page: Number(first(sp.page)) || 1,
+  };
+  const { cards, total, page, totalPages } = await searchPokedex(filters);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <ViewTransition enter="reveal-in" default="none">
+      <div>
+        <p className="mb-3 font-terminal text-xl leading-none text-gb-dark">
+          {total === 0
+            ? "NENHUM REGISTRO LOCALIZADO"
+            : `${total} REGISTRO${total > 1 ? "S" : ""} · EXIBINDO ${cards.length}`}
+        </p>
+
+        {cards.length === 0 ? (
+          <div className="dialog-box mx-auto my-10 flex max-w-md flex-col items-center gap-4 p-6 text-center">
+            <span className="text-4xl" aria-hidden>
+              ?
+            </span>
+            <p className="text-[10px] leading-relaxed">
+              NENHUM POKÉMON CORRESPONDE À BUSCA!
+            </p>
+            <p className="font-terminal text-lg text-gb-dark">
+              Tente outro nome, número ou combinação de filtros.
+            </p>
+          </div>
+        ) : (
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+            {cards.map((card, index) => (
+              <PokemonCard key={card.id} card={card} index={index} />
+            ))}
+          </ul>
+        )}
+
+        <Pagination page={page} totalPages={totalPages} filters={filters} />
+      </div>
+    </ViewTransition>
+  );
+}
+
+function GridSkeleton() {
+  return (
+    <ViewTransition exit="reveal-out">
+      <div>
+        <p className="mb-3 font-terminal text-xl leading-none text-gb-dark">
+          <span className="blink">▮</span> CONSULTANDO BANCO DE DADOS...
+        </p>
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+          {Array.from({ length: 12 }, (_, i) => (
+            <li
+              key={i}
+              className="dialog-box flex h-44 items-center justify-center"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+              <Pokeball spin className="opacity-70" />
+            </li>
+          ))}
+        </ul>
+      </div>
+    </ViewTransition>
+  );
+}
+
+export default function Home({ searchParams }: { searchParams: SearchParams }) {
+  return (
+    <ViewTransition
+      enter={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
+      exit={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
+      default="none"
+    >
+      <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b-[3px] border-gb-darkest pb-3">
+        <h2 className="text-[11px] text-gb-darkest sm:text-sm">
+          <span className="blink">▶</span> BANCO DE DADOS
+        </h2>
+        <span className="font-terminal text-lg text-gb-dark sm:text-xl">
+          1025 CRIATURAS CATALOGADAS
+        </span>
+      </div>
+
+      <Suspense fallback={null}>
+        <FilterBar />
+      </Suspense>
+
+      <Suspense fallback={<GridSkeleton />}>
+        <Results searchParams={searchParams} />
+      </Suspense>
+      </div>
+    </ViewTransition>
   );
 }
