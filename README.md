@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RETRODEX — Pokédex retrô
 
-## Getting Started
+Pokédex portátil estilo jogos antigos: a moldura é o Pokédex vermelho do anime,
+a área de conteúdo é uma tela Game Boy DMG com scanlines, e os painéis usam as
+caixas de diálogo de borda dupla de Pokémon Red/Blue. Dados da
+[PokeAPI](https://pokeapi.co/).
 
-First, run the development server:
+## Funcionalidades
+
+- **Listagem** dos 1025 Pokémon canônicos com sprites pixelados
+- **Filtros combináveis** por nome/número, tipo (18) e geração (I–IX) — tudo na
+  URL, compartilhável
+- **Paginação** estilo Game Boy (24 por página)
+- **Detalhes**: sprite animado, entrada da dex, altura/peso/habilidades, stats
+  com barras segmentadas, galeria de sprites (frente/costas/shiny), linha
+  evolutiva navegável com condições, grito (áudio) e navegação nº anterior/próximo
+- **404 com MissingNo.** e error boundary em forma de menu de batalha
+
+## Stack e técnica
+
+- Next.js 16 com **Cache Components** (`use cache` + `cacheLife("max")`) e PPR —
+  dados da PokeAPI são imutáveis, então tudo cacheia agressivamente
+- **View Transitions** (React `<ViewTransition>`): morph do sprite card→detalhe,
+  slides direcionais avançar/voltar, revelação de Suspense
+- **Motion** para microinterações (hover/tap dos cards, barras de stats, entrada
+  do herói) com easing quantizado em "frames" de sprite
+- Tailwind CSS v4, fontes Press Start 2P + VT323
+
+## Rodando
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev    # desenvolvimento
+npm run build && npm start  # produção
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Especificação de design em `docs/superpowers/specs/`.
