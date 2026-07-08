@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense, ViewTransition } from "react";
+import { BackButton } from "@/components/back-button";
 import { CryButton } from "@/components/cry-button";
 import { Pokeball } from "@/components/pokeball";
 import { DetailHero } from "@/components/detail-hero";
@@ -124,13 +125,7 @@ async function PokemonContent({ params }: { params: Params }) {
   return (
       <div className="flex flex-col gap-4">
         <nav className="flex flex-wrap items-center justify-between gap-2">
-          <Link
-            href="/"
-            transitionTypes={["nav-back"]}
-            className="press-btn bg-paper px-3 py-2 text-[9px]"
-          >
-            ◀ VOLTAR
-          </Link>
+          <BackButton />
           <div className="flex gap-2">
             {prev && (
               <Link

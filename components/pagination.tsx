@@ -48,17 +48,29 @@ export function Pagination({
   return (
     <nav
       aria-label="Paginação"
-      className="mt-6 flex items-center justify-between gap-3"
+      className="mt-6 flex items-center justify-between gap-2 sm:gap-3"
     >
-      <PageButton href={pageHref(filters, page - 1)} disabled={page <= 1}>
-        ◀ ANTERIOR
-      </PageButton>
+      <div className="flex gap-2">
+        <PageButton href={pageHref(filters, 1)} disabled={page <= 1}>
+          <span aria-hidden>◀◀</span>
+          <span className="sr-only">Primeira página</span>
+        </PageButton>
+        <PageButton href={pageHref(filters, page - 1)} disabled={page <= 1}>
+          ◀ ANTERIOR
+        </PageButton>
+      </div>
       <span className="font-terminal text-xl text-gb-darkest sm:text-2xl">
         PÁG {String(page).padStart(2, "0")}/{String(totalPages).padStart(2, "0")}
       </span>
-      <PageButton href={pageHref(filters, page + 1)} disabled={page >= totalPages}>
-        PRÓXIMA ▶
-      </PageButton>
+      <div className="flex gap-2">
+        <PageButton href={pageHref(filters, page + 1)} disabled={page >= totalPages}>
+          PRÓXIMA ▶
+        </PageButton>
+        <PageButton href={pageHref(filters, totalPages)} disabled={page >= totalPages}>
+          <span aria-hidden>▶▶</span>
+          <span className="sr-only">Última página</span>
+        </PageButton>
+      </div>
     </nav>
   );
 }
